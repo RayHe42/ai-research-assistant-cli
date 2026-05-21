@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-research-assistant-cli"
+version = "0.1.0"
+description = "A learning-oriented AI research assistant CLI"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[project.scripts]
+research = "research_assistant.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
