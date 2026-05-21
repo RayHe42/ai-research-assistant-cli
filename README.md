@@ -18,7 +18,7 @@ The final project should be able to:
 
 ## Current Status
 
-Project initialized with CLI skeleton and mock AI client.
+Project initialized with CLI skeleton, mock AI client, and configuration layer.
 
 Currently supported commands:
 
@@ -42,8 +42,6 @@ Current behavior:
 
 - Connect to real AI API (Claude, OpenAI, etc.)
 - Save interaction history to JSON
-- Add prompt templates
-- Add error handling
 - Add Docker support
 - Add GitHub Actions CI
 
@@ -79,11 +77,13 @@ ai-research-assistant-cli/
 │   └── research_assistant/
 │       ├── __init__.py
 │       ├── cli.py
+│       ├── config.py
 │       ├── file_loader.py
 │       ├── prompts.py
 │       └── ai_client.py
 └── tests/
     ├── __init__.py
+    ├── test_config.py
     ├── test_file_loader.py
     └── test_prompts.py
 ```
@@ -135,6 +135,42 @@ Show history:
 research history
 ```
 
+## Configuration
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `RESEARCH_ASSISTANT_MODE` | AI mode: `mock` or `real` | `mock` |
+| `RESEARCH_ASSISTANT_API_KEY` | API key (required for real mode) | - |
+| `RESEARCH_ASSISTANT_MODEL` | Model name | `mock-model` |
+
+### Using Mock Mode (Default)
+
+No configuration needed. The CLI works out of the box with mock responses:
+
+```bash
+research summarize examples/sample_note.md
+```
+
+### Using Real Mode
+
+```bash
+export RESEARCH_ASSISTANT_MODE="real"
+export RESEARCH_ASSISTANT_API_KEY="your-api-key-here"
+export RESEARCH_ASSISTANT_MODEL="gpt-4"  # optional
+```
+
+If you set `RESEARCH_ASSISTANT_MODE=real` without providing an API key, you'll get a clear error message.
+
+### API Key Safety
+
+- Never commit API keys to Git
+- Never hardcode API keys in source code
+- Use environment variables only
+- Add `.env` to `.gitignore`
+- Never print API keys in logs or error messages
+
 ## Testing
 
 Run tests:
@@ -164,26 +200,6 @@ Command meanings:
 - `make test`: run the test suite
 - `make help`: show CLI help
 - `make clean`: remove Python cache and build artifacts
-
-## Configuration
-
-Future AI API integration should use environment variables.
-
-Example:
-
-```bash
-export AI_API_KEY="..."
-```
-
-API keys must never be committed to Git.
-
-Do not commit:
-
-- `.env`
-- `.env.*`
-- API keys
-- local data
-- generated cache files
 
 ## Engineering Goals
 

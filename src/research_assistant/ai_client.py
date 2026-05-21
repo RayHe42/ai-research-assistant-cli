@@ -2,6 +2,8 @@
 
 from abc import ABC, abstractmethod
 
+from research_assistant.config import get_mode, get_model, validate_real_mode
+
 
 class AIClient(ABC):
     """Abstract base class for AI clients."""
@@ -44,9 +46,27 @@ class MockClient(AIClient):
 
 
 def get_client() -> AIClient:
-    """Get an AI client instance.
+    """Get an AI client instance based on configuration.
 
-    Currently returns a MockClient. In the future, this will
-    return a real AI client based on configuration.
+    Returns:
+        A MockClient if mode is 'mock', otherwise raises an error
+        because real AI client is not implemented yet.
+
+    Raises:
+        ConfigError: If real mode is requested but API key is missing.
+        NotImplementedError: If real mode is requested but not implemented.
     """
-    return MockClient()
+    mode = get_mode()
+
+    if mode == "mock":
+        return MockClient()
+
+    # Real mode - validate configuration first
+    validate_real_mode()
+
+    # Real client not implemented yet
+    model = get_model()
+    raise NotImplementedError(
+        f"Real AI client is not implemented yet. "
+        f"Would use model: {model}"
+    )
