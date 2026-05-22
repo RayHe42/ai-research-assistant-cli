@@ -369,7 +369,29 @@ research -v ask file.md "question"
 - 测试命令：pytest -q
 - 环境变量：RESEARCH_ASSISTANT_MODE=mock（不设置 ANTHROPIC_API_KEY）
 
-## 12. 未来扩展
+## 12. v0.1.0 范围
+
+v0.1.0 是首个发布版本，包含以下已完成功能：
+
+| 能力 | 状态 |
+|------|------|
+| CLI 框架（argparse + 子命令） | 完成 |
+| 文件读取（.txt / .md） | 完成 |
+| summarize / ask / tasks / history 命令 | 完成 |
+| Mock 模式（默认，无需 API key） | 完成 |
+| Real 模式（Claude API via Anthropic SDK） | 完成 |
+| --save 输出保存 | 完成 |
+| --verbose 调试日志 | 完成 |
+| 环境变量配置管理 | 完成 |
+| 自定义异常层次 + 友好错误消息 | 完成 |
+| 结构化 Prompt 工程 | 完成 |
+| API key 安全（日志、错误信息不泄露） | 完成 |
+| 98 个自动化测试 | 完成 |
+| GitHub Actions CI | 完成 |
+
+v0.1.0 不包含：PDF 解析、历史持久化、RAG、Web UI、Docker。
+
+## 13. 未来扩展
 
 - 支持 PDF 文件解析
 - 添加历史记录存储（JSON 文件）
