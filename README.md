@@ -18,15 +18,15 @@ The final project should be able to:
 
 ## Current Status
 
-Project initialized with CLI skeleton, mock AI client, configuration layer, real Claude API integration, and structured prompt engineering.
+Project initialized with CLI skeleton, mock AI client, configuration layer, real Claude API integration, structured prompt engineering, and output saving.
 
 Currently supported commands:
 
 ```bash
 research --help
-research summarize <file>
-research ask <file> "<question>"
-research tasks <file>
+research summarize <file> [--save]
+research ask <file> "<question>" [--save]
+research tasks <file> [--save]
 research history
 ```
 
@@ -34,6 +34,7 @@ Current behavior:
 
 - Mock mode (default): returns placeholder responses
 - Real mode: calls Claude API via Anthropic Python SDK with structured prompts
+- `--save` flag saves output to `outputs/` directory
 
 ## Project Structure
 
@@ -55,6 +56,7 @@ ai-research-assistant-cli/
 │       ├── cli.py
 │       ├── config.py
 │       ├── file_loader.py
+│       ├── output_writer.py
 │       ├── prompts.py
 │       └── ai_client.py
 └── tests/
@@ -62,6 +64,7 @@ ai-research-assistant-cli/
     ├── test_ai_client.py
     ├── test_config.py
     ├── test_file_loader.py
+    ├── test_output_writer.py
     └── test_prompts.py
 ```
 
@@ -110,6 +113,29 @@ Show history:
 
 ```bash
 research history
+```
+
+### Saving Output
+
+Save summarize result to file:
+
+```bash
+research summarize examples/sample_note.md --save
+# Output saved to: outputs/sample_note_summarize.md
+```
+
+Save ask result to file:
+
+```bash
+research ask examples/sample_note.md "What is self-attention?" --save
+# Output saved to: outputs/sample_note_ask.md
+```
+
+Save tasks result to file:
+
+```bash
+research tasks examples/sample_note.md --save
+# Output saved to: outputs/sample_note_tasks.md
 ```
 
 ### Output Examples

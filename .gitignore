@@ -17,6 +17,9 @@ dist/
 data/
 history.json
 
+# Output files
+outputs/
+
 # Environment variables
 .env
 .env.*

@@ -8,11 +8,11 @@
 
 ```text
 用户输入 → CLI 解析 → 文件读取 → Prompt 构建 → AI 处理 → 结果输出
-                ↓
-            配置管理（环境变量）
+                ↓                                      ↓
+            配置管理（环境变量）                    [可选] 保存到文件
 ```
 
-CLI 入口（cli.py）负责解析命令行参数，调用文件读取模块（file_loader.py）加载文件内容，然后通过 prompt 构建模块（prompts.py）生成结构化 prompt，再通过 AI 客户端（ai_client.py）处理内容，最后输出结果。
+CLI 入口（cli.py）负责解析命令行参数，调用文件读取模块（file_loader.py）加载文件内容，然后通过 prompt 构建模块（prompts.py）生成结构化 prompt，再通过 AI 客户端（ai_client.py）处理内容，最后输出结果。配置模块（config.py）负责从环境变量读取配置。输出模块（output_writer.py）负责将结果保存到文件。
 
 ## 3. 模块设计
 
@@ -20,6 +20,7 @@ CLI 入口（cli.py）负责解析命令行参数，调用文件读取模块（f
 
 - 使用 argparse 解析命令行参数
 - 支持子命令：summarize, ask, tasks, history
+- 支持 --save 参数保存输出到文件
 - 调用其他模块完成实际工作
 - 处理错误并输出友好的错误信息
 - 不直接调用 Anthropic SDK
@@ -39,6 +40,14 @@ CLI 入口（cli.py）负责解析命令行参数，调用文件读取模块（f
 - 读取 .txt 和 .md 文件
 - 返回文件内容的字符串
 - 处理文件不存在和不支持的文件格式
+
+### output_writer.py — 输出保存
+
+- 提供 save_output 函数保存 AI 输出到文件
+- 自动生成唯一的文件名（输入文件名 + 命令类型）
+- 创建 outputs/ 目录（如果不存在）
+- 返回保存的文件路径
+- 输出格式为 Markdown
 
 ### prompts.py — 提示词工程
 
@@ -72,9 +81,41 @@ prompts.build_xxx() 构建结构化 prompt
 ai_client 处理内容（根据配置选择 mock 或 real）
     ↓
 CLI 输出结果（Markdown 格式）
+    ↓
+[可选] output_writer 保存到文件（如果 --save）
 ```
 
-## 5. Prompt 设计原则
+## 5. 输出保存设计
+
+### 文件命名规则
+
+格式：`{input_filename}_{command}.md`
+
+示例：
+- `sample_note_summarize.md`
+- `sample_note_ask.md`
+- `sample_note_tasks.md`
+
+### 默认输出目录
+
+`outputs/` 目录，如果不存在会自动创建。
+
+### 使用方式
+
+```bash
+# 不保存（默认）
+research summarize examples/sample_note.md
+
+# 保存到文件
+research summarize examples/sample_note.md --save
+```
+
+### 错误处理
+
+- 目录创建失败：打印错误信息
+- 文件写入失败：打印错误信息
+
+## 6. Prompt 设计原则
 
 ### 设计目标
 
@@ -129,7 +170,7 @@ CLI 输出结果（Markdown 格式）
 - 信息不足时明确说明
 - 保持输出格式一致
 
-## 6. 配置层设计
+## 7. 配置层设计
 
 ### 环境变量
 
@@ -159,7 +200,7 @@ elif mode == "real":
 - real 模式没有 API key：ConfigError
 - API 调用失败：Anthropic SDK 异常
 
-## 7. AI Client 设计
+## 8. AI Client 设计
 
 ### 抽象接口
 
@@ -187,7 +228,7 @@ class AIClient(ABC):
 
 `get_client()` 根据配置返回对应的客户端实例。
 
-## 8. 错误处理
+## 9. 错误处理
 
 | 场景 | 处理方式 |
 |------|----------|
@@ -197,13 +238,15 @@ class AIClient(ABC):
 | 无效的模式 | ConfigError → 打印错误信息 |
 | real 模式没有 API key | ConfigError → 打印错误信息和设置方法 |
 | API 调用失败 | Anthropic SDK 异常 → 打印错误信息 |
+| 输出保存失败 | IOError → 打印错误信息 |
 
-## 9. 测试策略
+## 10. 测试策略
 
 | 模块 | 测试重点 |
 |------|----------|
 | config.py | 默认值、环境变量读取、验证逻辑 |
 | file_loader.py | 正常读取、文件不存在、格式不支持、空文件 |
+| output_writer.py | 文件创建、目录创建、内容写入、文件名格式 |
 | prompts.py | builder 函数输出包含必要内容和格式 |
 | ai_client.py | MockClient 返回值、ClaudeClient API 调用（使用 monkeypatch 模拟） |
 | cli.py | 不测试（通过手动验证） |
@@ -215,8 +258,9 @@ class AIClient(ABC):
 - MockClient 测试不需要模拟
 - ClaudeClient 测试通过模拟 anthropic.Anthropic 实现
 - Prompt 测试验证输出结构和内容
+- Output writer 测试使用 tmp_path 处理临时文件
 
-## 10. 未来扩展
+## 11. 未来扩展
 
 - 支持 PDF 文件解析
 - 添加历史记录存储（JSON 文件）
