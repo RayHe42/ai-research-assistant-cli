@@ -18,7 +18,7 @@ The final project should be able to:
 
 ## Current Status
 
-Project initialized with CLI skeleton, mock AI client, and configuration layer.
+Project initialized with CLI skeleton, mock AI client, configuration layer, and real Claude API integration.
 
 Currently supported commands:
 
@@ -32,32 +32,8 @@ research history
 
 Current behavior:
 
-- `research summarize notes.md` — prints a mock summary
-- `research ask notes.md "What is X?"` — prints a mock answer
-- `research tasks notes.md` — prints mock study tasks
-- `research history` — prints "No history yet."
-- AI API integration is not implemented yet (uses MockClient)
-
-## Planned Features
-
-- Connect to real AI API (Claude, OpenAI, etc.)
-- Save interaction history to JSON
-- Add Docker support
-- Add GitHub Actions CI
-
-## Non-Goals for the First MVP
-
-The first version will not include:
-
-- PDF parsing
-- Web UI
-- Database
-- RAG
-- Multi-agent workflow
-- User accounts
-- Deployment
-
-These can be added later after the core CLI and AI workflow are stable.
+- Mock mode (default): returns placeholder responses
+- Real mode: calls Claude API via Anthropic Python SDK
 
 ## Project Structure
 
@@ -83,6 +59,7 @@ ai-research-assistant-cli/
 │       └── ai_client.py
 └── tests/
     ├── __init__.py
+    ├── test_ai_client.py
     ├── test_config.py
     ├── test_file_loader.py
     └── test_prompts.py
@@ -142,8 +119,8 @@ research history
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `RESEARCH_ASSISTANT_MODE` | AI mode: `mock` or `real` | `mock` |
-| `RESEARCH_ASSISTANT_API_KEY` | API key (required for real mode) | - |
-| `RESEARCH_ASSISTANT_MODEL` | Model name | `mock-model` |
+| `ANTHROPIC_API_KEY` | Anthropic API key (required for real mode) | - |
+| `RESEARCH_ASSISTANT_MODEL` | Claude model name | `claude-sonnet-4-20250514` |
 
 ### Using Mock Mode (Default)
 
@@ -151,15 +128,18 @@ No configuration needed. The CLI works out of the box with mock responses:
 
 ```bash
 research summarize examples/sample_note.md
+# Output: [Mock Summary] This is a placeholder summary...
 ```
 
-### Using Real Mode
+### Using Real Mode (Claude API)
 
 ```bash
 export RESEARCH_ASSISTANT_MODE="real"
-export RESEARCH_ASSISTANT_API_KEY="your-api-key-here"
-export RESEARCH_ASSISTANT_MODEL="gpt-4"  # optional
+export ANTHROPIC_API_KEY="your-anthropic-api-key"
+export RESEARCH_ASSISTANT_MODEL="claude-sonnet-4-20250514"  # optional
 ```
+
+Get your API key from: https://console.anthropic.com/
 
 If you set `RESEARCH_ASSISTANT_MODE=real` without providing an API key, you'll get a clear error message.
 

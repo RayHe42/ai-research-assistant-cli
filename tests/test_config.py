@@ -54,22 +54,22 @@ def test_read_api_key_from_env(monkeypatch):
 
 
 def test_default_model(monkeypatch):
-    """Test that default model is 'mock-model'."""
+    """Test that default model is 'claude-sonnet-4-20250514'."""
     monkeypatch.delenv(ENV_MODEL, raising=False)
     assert get_model() == DEFAULT_MODEL
 
 
 def test_read_model_from_env(monkeypatch):
     """Test reading model from environment variable."""
-    monkeypatch.setenv(ENV_MODEL, "gpt-4")
-    assert get_model() == "gpt-4"
+    monkeypatch.setenv(ENV_MODEL, "claude-opus-4-20250514")
+    assert get_model() == "claude-opus-4-20250514"
 
 
 def test_real_mode_without_key_raises_error(monkeypatch):
     """Test that real mode without API key raises ConfigError."""
     monkeypatch.setenv(ENV_MODE, "real")
     monkeypatch.delenv(ENV_API_KEY, raising=False)
-    with pytest.raises(ConfigError, match="RESEARCH_ASSISTANT_API_KEY is not set"):
+    with pytest.raises(ConfigError, match="ANTHROPIC_API_KEY is not set"):
         validate_real_mode()
 
 

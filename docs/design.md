@@ -22,6 +22,7 @@ CLI 入口（cli.py）负责解析命令行参数，调用文件读取模块（f
 - 支持子命令：summarize, ask, tasks, history
 - 调用其他模块完成实际工作
 - 处理错误并输出友好的错误信息
+- 不直接调用 Anthropic SDK
 
 ### config.py — 配置管理
 
@@ -30,7 +31,7 @@ CLI 入口（cli.py）负责解析命令行参数，调用文件读取模块（f
 - 验证配置有效性
 - 支持的环境变量：
   - `RESEARCH_ASSISTANT_MODE`：AI 模式（mock/real）
-  - `RESEARCH_ASSISTANT_API_KEY`：API 密钥
+  - `ANTHROPIC_API_KEY`：Anthropic API 密钥
   - `RESEARCH_ASSISTANT_MODEL`：模型名称
 
 ### file_loader.py — 文件读取
@@ -49,9 +50,9 @@ CLI 入口（cli.py）负责解析命令行参数，调用文件读取模块（f
 
 - 定义 AIClient 抽象基类
 - 实现 MockClient 返回固定响应
+- 实现 ClaudeClient 调用 Anthropic Claude API
 - 提供 get_client 工厂函数
 - 根据配置选择客户端（mock 或 real）
-- real 模式未实现，会抛出 NotImplementedError
 
 ## 4. 数据流
 
@@ -76,8 +77,8 @@ CLI 输出结果
 | 变量 | 用途 | 默认值 |
 |------|------|--------|
 | RESEARCH_ASSISTANT_MODE | AI 模式 | mock |
-| RESEARCH_ASSISTANT_API_KEY | API 密钥 | None |
-| RESEARCH_ASSISTANT_MODEL | 模型名称 | mock-model |
+| ANTHROPIC_API_KEY | Anthropic API 密钥 | None |
+| RESEARCH_ASSISTANT_MODEL | 模型名称 | claude-sonnet-4-20250514 |
 
 ### 模式选择逻辑
 
@@ -90,24 +91,42 @@ if mode == "mock":
     return MockClient()
 elif mode == "real":
     validate_real_mode()  # 检查 API key
-    raise NotImplementedError  # 未实现
+    return ClaudeClient(api_key, model)
 ```
 
 ### 错误处理
 
 - 无效的模式值：ConfigError
 - real 模式没有 API key：ConfigError
-- real 模式有 API key：NotImplementedError（未实现）
+- API 调用失败：Anthropic SDK 异常
 
-## 6. Mock 策略
+## 6. AI Client 设计
 
-当前阶段不接入真实 AI API，使用 MockClient 返回固定的模拟响应：
+### 抽象接口
 
-- summarize: 返回 "[Mock Summary] ..."
-- ask: 返回 "[Mock Answer] ..."
-- generate_tasks: 返回 3 条模拟学习任务
+```python
+class AIClient(ABC):
+    def summarize(self, prompt: str) -> str
+    def ask(self, prompt: str) -> str
+    def generate_tasks(self, prompt: str) -> str
+```
 
-这样可以在不依赖外部 API 的情况下测试整个数据流。
+### MockClient
+
+- 返回固定的模拟响应
+- 不需要 API key
+- 用于开发和测试
+
+### ClaudeClient
+
+- 使用 Anthropic Python SDK
+- 通过 `anthropic.Anthropic(api_key)` 初始化
+- 调用 `client.messages.create()` 发送请求
+- 解析响应并返回文本
+
+### 工厂函数
+
+`get_client()` 根据配置返回对应的客户端实例。
 
 ## 7. 错误处理
 
@@ -118,7 +137,7 @@ elif mode == "real":
 | 未知命令 | argparse 自动打印帮助信息 |
 | 无效的模式 | ConfigError → 打印错误信息 |
 | real 模式没有 API key | ConfigError → 打印错误信息和设置方法 |
-| real 模式有 API key | NotImplementedError → 打印未实现信息 |
+| API 调用失败 | Anthropic SDK 异常 → 打印错误信息 |
 
 ## 8. 测试策略
 
@@ -127,12 +146,18 @@ elif mode == "real":
 | config.py | 默认值、环境变量读取、验证逻辑 |
 | file_loader.py | 正常读取、文件不存在、格式不支持、空文件 |
 | prompts.py | 模板包含占位符、格式化正确替换 |
+| ai_client.py | MockClient 返回值、ClaudeClient API 调用（使用 monkeypatch 模拟） |
 | cli.py | 不测试（通过手动验证） |
-| ai_client.py | 不测试（mock 实现简单） |
+
+### 测试原则
+
+- 测试中禁止调用真实 API
+- 使用 monkeypatch 模拟 Anthropic SDK
+- MockClient 测试不需要模拟
+- ClaudeClient 测试通过模拟 anthropic.Anthropic 实现
 
 ## 9. 未来扩展
 
-- 接入真实 AI API（Claude、OpenAI 等）
 - 支持 PDF 文件解析
 - 添加历史记录存储（JSON 文件）
 - 添加 RAG（检索增强生成）

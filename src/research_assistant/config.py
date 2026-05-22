@@ -4,12 +4,12 @@ import os
 
 # Environment variable names
 ENV_MODE = "RESEARCH_ASSISTANT_MODE"
-ENV_API_KEY = "RESEARCH_ASSISTANT_API_KEY"
+ENV_API_KEY = "ANTHROPIC_API_KEY"
 ENV_MODEL = "RESEARCH_ASSISTANT_MODEL"
 
 # Default values
 DEFAULT_MODE = "mock"
-DEFAULT_MODEL = "mock-model"
+DEFAULT_MODEL = "claude-sonnet-4-20250514"
 
 # Valid modes
 VALID_MODES = {"mock", "real"}
@@ -35,7 +35,7 @@ def get_mode() -> str:
 
 
 def get_api_key() -> str | None:
-    """Get the API key from environment variable.
+    """Get the Anthropic API key from environment variable.
 
     Returns:
         The API key string, or None if not set.

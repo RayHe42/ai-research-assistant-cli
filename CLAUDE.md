@@ -23,6 +23,7 @@
 - 运行测试：make test 或 pytest -q
 - 使用 tmp_path fixture 处理临时文件
 - 使用 monkeypatch fixture 处理环境变量
+- 测试中禁止调用真实 API，使用 monkeypatch 模拟
 
 ## 修改流程
 
@@ -49,6 +50,7 @@
 - 不要在错误信息中暴露 API key
 - 不要将 API key 传递给第三方库以外的地方
 - 配置读取失败时，给出清晰的错误信息，不要静默回退
+- Anthropic SDK 会自动读取 ANTHROPIC_API_KEY，不要手动传递
 
 ## 模块职责
 
@@ -58,4 +60,4 @@
 | config.py | 环境变量配置管理 |
 | file_loader.py | 读取 .txt/.md 文件 |
 | prompts.py | prompt 模板定义 |
-| ai_client.py | AI 客户端抽象 + mock |
+| ai_client.py | AI 客户端抽象 + mock + Claude API |
