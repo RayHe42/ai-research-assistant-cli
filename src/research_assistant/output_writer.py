@@ -2,6 +2,9 @@
 
 from pathlib import Path
 
+from research_assistant.exceptions import OutputWriteError
+from research_assistant.logger import get_logger
+
 DEFAULT_OUTPUT_DIR = "outputs"
 
 
@@ -15,7 +18,6 @@ def generate_output_filename(command: str, input_filename: str) -> str:
     Returns:
         The output filename in format: {input_filename}_{command}.md
     """
-    # Remove extension from input filename
     stem = Path(input_filename).stem
     return f"{stem}_{command}.md"
 
@@ -36,16 +38,21 @@ def save_output(
 
     Returns:
         The path to the saved file.
+
+    Raises:
+        OutputWriteError: If the file cannot be saved.
     """
-    # Create output directory if it doesn't exist
-    output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
+    logger = get_logger()
 
-    # Generate filename
-    filename = generate_output_filename(command, Path(input_filename).name)
-    filepath = output_path / filename
+    try:
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
 
-    # Write content to file
-    filepath.write_text(content, encoding="utf-8")
+        filename = generate_output_filename(command, Path(input_filename).name)
+        filepath = output_path / filename
 
-    return str(filepath)
+        filepath.write_text(content, encoding="utf-8")
+        logger.debug("Output saved to: %s", filepath)
+        return str(filepath)
+    except OSError as e:
+        raise OutputWriteError(f"Failed to save output to {output_dir}: {e}") from e

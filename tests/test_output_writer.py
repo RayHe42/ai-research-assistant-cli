@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from research_assistant.exceptions import OutputWriteError
 from research_assistant.output_writer import (
     DEFAULT_OUTPUT_DIR,
     generate_output_filename,
@@ -85,3 +86,17 @@ def test_save_output_with_path_in_filename(tmp_path):
 def test_default_output_dir():
     """Test that DEFAULT_OUTPUT_DIR is 'outputs'."""
     assert DEFAULT_OUTPUT_DIR == "outputs"
+
+
+def test_save_output_permission_error_raises_output_write_error(tmp_path, monkeypatch):
+    """Test that permission error raises OutputWriteError."""
+    import research_assistant.output_writer as ow
+
+    original_mkdir = type(tmp_path).mkdir
+
+    def failing_mkdir(self, *args, **kwargs):
+        raise OSError("Permission denied")
+
+    monkeypatch.setattr(type(tmp_path), "mkdir", failing_mkdir)
+    with pytest.raises(OutputWriteError, match="Failed to save output"):
+        save_output("content", "summarize", "test.md", str(tmp_path / "outputs"))

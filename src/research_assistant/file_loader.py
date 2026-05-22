@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+from research_assistant.exceptions import FileLoadError
+
 SUPPORTED_EXTENSIONS = {".txt", ".md"}
 
 
@@ -15,18 +17,22 @@ def load_file(filepath: str) -> str:
         The file content as a string.
 
     Raises:
-        FileNotFoundError: If the file does not exist.
-        ValueError: If the file extension is not supported.
+        FileLoadError: If the file does not exist, is unsupported, or is empty.
     """
     path = Path(filepath)
 
     if not path.exists():
-        raise FileNotFoundError(f"File not found: {filepath}")
+        raise FileLoadError(f"File not found: {filepath}")
 
     if path.suffix.lower() not in SUPPORTED_EXTENSIONS:
-        raise ValueError(
+        raise FileLoadError(
             f"Unsupported file type: {path.suffix}. "
             f"Supported types: {', '.join(sorted(SUPPORTED_EXTENSIONS))}"
         )
 
-    return path.read_text(encoding="utf-8")
+    content = path.read_text(encoding="utf-8")
+
+    if not content.strip():
+        raise FileLoadError(f"File is empty: {filepath}")
+
+    return content

@@ -8,12 +8,12 @@ from research_assistant.config import (
     ENV_API_KEY,
     ENV_MODE,
     ENV_MODEL,
-    ConfigError,
     get_api_key,
     get_mode,
     get_model,
     validate_real_mode,
 )
+from research_assistant.exceptions import ConfigError
 
 
 def test_default_mode_is_mock(monkeypatch):

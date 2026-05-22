@@ -24,10 +24,10 @@ Currently supported commands:
 
 ```bash
 research --help
-research summarize <file> [--save]
-research ask <file> "<question>" [--save]
-research tasks <file> [--save]
-research history
+research [--verbose|-v] summarize <file> [--save]
+research [--verbose|-v] ask <file> "<question>" [--save]
+research [--verbose|-v] tasks <file> [--save]
+research [--verbose|-v] history
 ```
 
 Current behavior:
@@ -35,6 +35,8 @@ Current behavior:
 - Mock mode (default): returns placeholder responses
 - Real mode: calls Claude API via Anthropic Python SDK with structured prompts
 - `--save` flag saves output to `outputs/` directory
+- `--verbose` flag enables debug logging and detailed error output
+- Friendly error messages for all failure cases (no raw tracebacks)
 
 ## Project Structure
 
@@ -55,15 +57,20 @@ ai-research-assistant-cli/
 │       ├── __init__.py
 │       ├── cli.py
 │       ├── config.py
+│       ├── exceptions.py
 │       ├── file_loader.py
+│       ├── logger.py
 │       ├── output_writer.py
 │       ├── prompts.py
 │       └── ai_client.py
 └── tests/
     ├── __init__.py
     ├── test_ai_client.py
+    ├── test_cli_errors.py
     ├── test_config.py
+    ├── test_exceptions.py
     ├── test_file_loader.py
+    ├── test_logger.py
     ├── test_output_writer.py
     └── test_prompts.py
 ```
@@ -249,6 +256,42 @@ If you set `RESEARCH_ASSISTANT_MODE=real` without providing an API key, you'll g
 - Use environment variables only
 - Add `.env` to `.gitignore`
 - Never print API keys in logs or error messages
+
+## Error Handling
+
+The CLI provides friendly error messages instead of Python tracebacks:
+
+| Error | User sees |
+|-------|-----------|
+| File not found | `Error: File not found: path/to/file` |
+| Unsupported file type | `Error: Unsupported file type: .csv. Supported types: .md, .txt` |
+| Empty file | `Error: File is empty: path/to/file` |
+| Invalid mode | `Error: Invalid RESEARCH_ASSISTANT_MODE=foo. Must be one of: mock, real` |
+| Missing API key | `Error: RESEARCH_ASSISTANT_MODE is 'real', but ANTHROPIC_API_KEY is not set.` |
+| API authentication failed | `Error: API authentication failed. Check your ANTHROPIC_API_KEY.` |
+| API rate limit | `Error: API rate limit exceeded. Please try again later.` |
+| Output save failed | `Error: Failed to save output to outputs: ...` |
+
+All errors exit with code 1.
+
+### Verbose Mode
+
+Use `--verbose` (or `-v`) to see detailed debug output:
+
+```bash
+# Verbose with long flag
+research --verbose summarize examples/sample_note.md
+
+# Verbose with short flag
+research -v summarize examples/sample_note.md
+
+# Verbose with any subcommand
+research -v ask examples/sample_note.md "What is self-attention?"
+```
+
+Verbose mode shows internal steps like API call details and output file paths. For unexpected errors, `--verbose` shows the full traceback for debugging.
+
+Verbose mode never prints API keys or file contents.
 
 ## Testing
 

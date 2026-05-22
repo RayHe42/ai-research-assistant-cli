@@ -2,6 +2,8 @@
 
 import os
 
+from research_assistant.exceptions import ConfigError
+
 # Environment variable names
 ENV_MODE = "RESEARCH_ASSISTANT_MODE"
 ENV_API_KEY = "ANTHROPIC_API_KEY"
@@ -13,10 +15,6 @@ DEFAULT_MODEL = "claude-sonnet-4-20250514"
 
 # Valid modes
 VALID_MODES = {"mock", "real"}
-
-
-class ConfigError(Exception):
-    """Raised when configuration is invalid."""
 
 
 def get_mode() -> str:

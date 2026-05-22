@@ -1,9 +1,10 @@
 """Tests for ai_client module."""
 
+import anthropic
 import pytest
 
 from research_assistant.ai_client import AIClient, ClaudeClient, MockClient, get_client
-from research_assistant.config import ConfigError
+from research_assistant.exceptions import AIClientError, ConfigError
 
 
 def test_mock_client_is_aiclient():
@@ -132,3 +133,86 @@ def test_claude_client_generate_tasks(monkeypatch):
     client = ClaudeClient(api_key="test-key", model="test-model")
     result = client.generate_tasks("test prompt")
     assert result == "Test tasks"
+
+
+def _make_mock_anthropic(exception_cls, message):
+    """Create a mock Anthropic client that raises the given exception."""
+
+    class MockMessages:
+        def create(self, **kwargs):
+            raise exception_cls(message)
+
+    class MockAnthropic:
+        def __init__(self, api_key):
+            self.messages = MockMessages()
+
+    return MockAnthropic
+
+
+def test_claude_client_auth_error_raises_ai_client_error(monkeypatch):
+    """Test that AuthenticationError is wrapped in AIClientError."""
+    # Use a simple subclass to avoid httpx.Response requirement
+    class FakeAuthError(anthropic.AuthenticationError):
+        def __init__(self, message):
+            Exception.__init__(self, message)
+
+    mock_cls = _make_mock_anthropic(FakeAuthError, "invalid key")
+    monkeypatch.setattr("research_assistant.ai_client.anthropic.Anthropic", mock_cls)
+    client = ClaudeClient(api_key="test-key", model="test-model")
+    with pytest.raises(AIClientError, match="authentication failed"):
+        client.summarize("test prompt")
+
+
+def test_claude_client_rate_limit_raises_ai_client_error(monkeypatch):
+    """Test that RateLimitError is wrapped in AIClientError."""
+    class FakeRateLimitError(anthropic.RateLimitError):
+        def __init__(self, message):
+            Exception.__init__(self, message)
+
+    mock_cls = _make_mock_anthropic(FakeRateLimitError, "rate limited")
+    monkeypatch.setattr("research_assistant.ai_client.anthropic.Anthropic", mock_cls)
+    client = ClaudeClient(api_key="test-key", model="test-model")
+    with pytest.raises(AIClientError, match="rate limit"):
+        client.ask("test prompt")
+
+
+def test_claude_client_api_error_raises_ai_client_error(monkeypatch):
+    """Test that APIError is wrapped in AIClientError."""
+    class FakeAPIError(anthropic.APIError):
+        def __init__(self, message):
+            Exception.__init__(self, message)
+
+    mock_cls = _make_mock_anthropic(FakeAPIError, "server error")
+    monkeypatch.setattr("research_assistant.ai_client.anthropic.Anthropic", mock_cls)
+    client = ClaudeClient(api_key="test-key", model="test-model")
+    with pytest.raises(AIClientError, match="API call failed"):
+        client.generate_tasks("test prompt")
+
+
+def test_claude_client_api_error_does_not_leak_details(monkeypatch):
+    """Test that APIError message does not leak internal details."""
+    class FakeAPIError(anthropic.APIError):
+        def __init__(self, message):
+            Exception.__init__(self, message)
+
+    mock_cls = _make_mock_anthropic(FakeAPIError, "internal server detail: req-abc-123")
+    monkeypatch.setattr("research_assistant.ai_client.anthropic.Anthropic", mock_cls)
+    client = ClaudeClient(api_key="test-key", model="test-model")
+    with pytest.raises(AIClientError) as exc_info:
+        client.summarize("test prompt")
+    assert "req-abc-123" not in str(exc_info.value)
+
+
+def test_claude_client_error_does_not_leak_api_key(monkeypatch):
+    """Test that AIClientError message does not contain the API key."""
+    class FakeAuthError(anthropic.AuthenticationError):
+        def __init__(self, message):
+            Exception.__init__(self, message)
+
+    mock_cls = _make_mock_anthropic(FakeAuthError, "invalid key")
+    monkeypatch.setattr("research_assistant.ai_client.anthropic.Anthropic", mock_cls)
+    secret_key = "sk-ant-secret-key-12345"
+    client = ClaudeClient(api_key=secret_key, model="test-model")
+    with pytest.raises(AIClientError) as exc_info:
+        client.summarize("test prompt")
+    assert secret_key not in str(exc_info.value)

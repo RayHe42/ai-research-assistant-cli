@@ -52,12 +52,33 @@
 - 配置读取失败时，给出清晰的错误信息，不要静默回退
 - Anthropic SDK 会自动读取 ANTHROPIC_API_KEY，不要手动传递
 
+## 日志安全规则
+
+日志中**禁止**记录以下内容：
+
+- API key 的值（任何格式，包括截断）
+- 用户笔记的完整内容
+- prompt 的完整内容
+- AI 输出的完整内容
+- Authorization header
+
+允许在 DEBUG 级别记录的元数据：
+
+- 文件名（不含完整路径）
+- 命令名
+- prompt 长度（字符数，非内容）
+- AI 响应长度（字符数，非内容）
+- 输出文件路径
+
 ## 模块职责
 
 | 模块 | 职责 |
 |------|------|
-| cli.py | CLI 入口，命令解析 |
+| cli.py | CLI 入口，命令解析，--verbose 参数，统一错误捕获 |
 | config.py | 环境变量配置管理 |
+| exceptions.py | 自定义异常层次结构 |
 | file_loader.py | 读取 .txt/.md 文件 |
+| logger.py | 日志配置（setup_logger, get_logger） |
 | prompts.py | prompt 模板定义 |
+| output_writer.py | 输出保存到文件 |
 | ai_client.py | AI 客户端抽象 + mock + Claude API |

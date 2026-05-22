@@ -5,6 +5,8 @@ from abc import ABC, abstractmethod
 import anthropic
 
 from research_assistant.config import get_api_key, get_mode, get_model, validate_real_mode
+from research_assistant.exceptions import AIClientError
+from research_assistant.logger import get_logger
 
 
 class AIClient(ABC):
@@ -69,13 +71,36 @@ class ClaudeClient(AIClient):
 
         Returns:
             The response text from Claude.
+
+        Raises:
+            AIClientError: If the API call fails.
         """
-        response = self.client.messages.create(
-            model=self.model,
-            max_tokens=max_tokens,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        return response.content[0].text
+        logger = get_logger()
+        logger.debug("Calling Claude API (model=%s, prompt_length=%d)", self.model, len(prompt))
+
+        try:
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=max_tokens,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            result = response.content[0].text
+            logger.debug("API response received (length=%d)", len(result))
+            return result
+        except anthropic.AuthenticationError as e:
+            raise AIClientError(
+                "API authentication failed. Check your ANTHROPIC_API_KEY."
+            ) from e
+        except anthropic.RateLimitError as e:
+            raise AIClientError(
+                "API rate limit exceeded. Please try again later."
+            ) from e
+        except anthropic.APIError as e:
+            raise AIClientError(
+                "API call failed. Check your network connection and try again."
+            ) from e
+        except (IndexError, AttributeError) as e:
+            raise AIClientError(f"Unexpected API response format: {e}") from e
 
     def summarize(self, prompt: str) -> str:
         """Generate a summary using Claude API."""
