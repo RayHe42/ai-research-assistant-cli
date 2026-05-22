@@ -18,7 +18,7 @@ The final project should be able to:
 
 ## Current Status
 
-Project initialized with CLI skeleton, mock AI client, configuration layer, and real Claude API integration.
+Project initialized with CLI skeleton, mock AI client, configuration layer, real Claude API integration, and structured prompt engineering.
 
 Currently supported commands:
 
@@ -33,7 +33,7 @@ research history
 Current behavior:
 
 - Mock mode (default): returns placeholder responses
-- Real mode: calls Claude API via Anthropic Python SDK
+- Real mode: calls Claude API via Anthropic Python SDK with structured prompts
 
 ## Project Structure
 
@@ -110,6 +110,79 @@ Show history:
 
 ```bash
 research history
+```
+
+### Output Examples
+
+**Summarize:**
+```bash
+research summarize examples/sample_note.md
+```
+Expected output (real mode):
+```
+## Summary
+
+The Transformer is a deep learning architecture that uses self-attention mechanisms instead of recurrent neural networks...
+
+## Key Points
+
+- Self-attention allows weighing importance of different words
+- Multi-head attention attends to different representation subspaces
+- Positional encoding provides sequence position information
+
+## Terms
+
+- Self-Attention: Mechanism to weigh word importance in context
+- Multi-Head Attention: Multiple attention functions in parallel
+
+## Follow-up Questions
+
+1. How does self-attention scale with sequence length?
+2. What are the computational advantages over RNNs?
+```
+
+**Ask:**
+```bash
+research ask examples/sample_note.md "What is self-attention?"
+```
+Expected output (real mode):
+```
+## Answer
+
+Self-attention allows the model to weigh the importance of different words in a sentence when processing each word.
+
+## Evidence from the Note
+
+> "Self-attention allows the model to weigh the importance of different words in a sentence when processing each word."
+
+## Caveats
+
+- The note provides a high-level overview without mathematical details
+```
+
+**Tasks:**
+```bash
+research tasks examples/sample_note.md
+```
+Expected output (real mode):
+```
+## Learning Tasks
+
+1. [Reading] Read the original "Attention Is All You Need" paper
+2. [Writing] Write a comparison between Transformer and RNN architectures
+3. [Practice] Implement a simple self-attention mechanism in Python
+
+## Suggested Order
+
+- Start with: Task 1 because it provides foundational understanding
+- Then: Task 2 because it deepens conceptual understanding
+- Finally: Task 3 because it requires practical implementation skills
+
+## Estimated Difficulty
+
+- Task 1: Medium
+- Task 2: Medium
+- Task 3: Hard
 ```
 
 ## Configuration

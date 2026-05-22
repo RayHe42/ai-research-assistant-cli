@@ -5,7 +5,7 @@ import sys
 
 from research_assistant.ai_client import get_client
 from research_assistant.file_loader import load_file
-from research_assistant.prompts import QA_PROMPT, SUMMARY_PROMPT, TASKS_PROMPT, format_prompt
+from research_assistant.prompts import build_qa_prompt, build_summarize_prompt, build_tasks_prompt
 
 
 def _load_file_or_exit(filepath: str) -> str:
@@ -27,7 +27,7 @@ def _load_file_or_exit(filepath: str) -> str:
 def cmd_summarize(args: argparse.Namespace) -> None:
     """Handle the summarize command."""
     content = _load_file_or_exit(args.file)
-    prompt = format_prompt(SUMMARY_PROMPT, text=content)
+    prompt = build_summarize_prompt(content)
     client = get_client()
     result = client.summarize(prompt)
     print(result)
@@ -36,7 +36,7 @@ def cmd_summarize(args: argparse.Namespace) -> None:
 def cmd_ask(args: argparse.Namespace) -> None:
     """Handle the ask command."""
     content = _load_file_or_exit(args.file)
-    prompt = format_prompt(QA_PROMPT, text=content, question=args.question)
+    prompt = build_qa_prompt(content, args.question)
     client = get_client()
     result = client.ask(prompt)
     print(result)
@@ -45,7 +45,7 @@ def cmd_ask(args: argparse.Namespace) -> None:
 def cmd_tasks(args: argparse.Namespace) -> None:
     """Handle the tasks command."""
     content = _load_file_or_exit(args.file)
-    prompt = format_prompt(TASKS_PROMPT, text=content)
+    prompt = build_tasks_prompt(content)
     client = get_client()
     result = client.generate_tasks(prompt)
     print(result)
