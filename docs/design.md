@@ -347,7 +347,7 @@ research -v ask file.md "question"
 | output_writer.py | 文件创建、目录创建、内容写入、文件名格式、OutputWriteError |
 | prompts.py | builder 函数输出包含必要内容和格式 |
 | ai_client.py | MockClient 返回值、ClaudeClient API 调用、AIClientError 包装、不泄露 API key |
-| cli.py | 友好错误消息、--verbose 参数、未知异常处理（通过 monkeypatch 测试） |
+| cli.py | 正常路径（summarize/ask/tasks/history/--save）、友好错误消息、--verbose 参数、未知异常处理（通过 monkeypatch sys.argv 和 capsys 测试） |
 
 ### 测试原则
 
@@ -358,6 +358,16 @@ research -v ask file.md "question"
 - Prompt 测试验证输出结构和内容
 - Output writer 测试使用 tmp_path 处理临时文件
 - CLI 错误处理测试通过 monkeypatch sys.argv 和 capsys 验证
+
+### CI（持续集成）
+
+使用 GitHub Actions 自动运行测试：
+
+- 触发条件：push 和 pull_request 到 main 分支
+- 运行环境：ubuntu-latest + Python 3.11
+- 安装步骤：pip install -r requirements.txt && pip install -e .
+- 测试命令：pytest -q
+- 环境变量：RESEARCH_ASSISTANT_MODE=mock（不设置 ANTHROPIC_API_KEY）
 
 ## 12. 未来扩展
 

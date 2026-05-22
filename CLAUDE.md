@@ -24,6 +24,9 @@
 - 使用 tmp_path fixture 处理临时文件
 - 使用 monkeypatch fixture 处理环境变量
 - 测试中禁止调用真实 API，使用 monkeypatch 模拟
+- 提交前必须运行 pytest -q，确保全部通过
+- CI 通过 GitHub Actions 自动运行测试，不能依赖真实 API key
+- 测试必须在 mock 模式下运行（RESEARCH_ASSISTANT_MODE=mock）
 
 ## 修改流程
 

@@ -1,5 +1,7 @@
 # AI Research Assistant CLI
 
+[![CI](https://github.com/anthropics/ai-research-assistant-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/anthropics/ai-research-assistant-cli/actions/workflows/ci.yml)
+
 A learning-oriented command-line AI research assistant.
 
 This project is part of a Python engineering and Claude Code learning path. The goal is to build a small but well-structured AI CLI project step by step, while practicing Python engineering, configuration management, prompt design, testing, documentation, and safe API key handling.
@@ -306,6 +308,17 @@ Or use Makefile:
 ```bash
 make test
 ```
+
+All tests run in mock mode — no real API calls are made, and no API key is required.
+
+### CI
+
+Every push and pull request to `main` automatically runs the test suite via GitHub Actions. The CI workflow:
+
+1. Sets up Python 3.11 on Ubuntu
+2. Installs project dependencies
+3. Runs `pytest -q`
+4. Uses mock mode (no API key needed)
 
 ## Makefile Commands
 

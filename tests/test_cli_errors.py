@@ -1,5 +1,7 @@
 """Tests for CLI error handling."""
 
+import logging
+
 import pytest
 
 from research_assistant.cli import main
@@ -9,6 +11,16 @@ from research_assistant.exceptions import (
     FileLoadError,
     OutputWriteError,
 )
+from research_assistant.logger import LOGGER_NAME
+
+
+@pytest.fixture(autouse=True)
+def reset_logger():
+    """Reset logger state between tests to avoid handler leaks."""
+    logger = logging.getLogger(LOGGER_NAME)
+    logger.handlers.clear()
+    yield
+    logger.handlers.clear()
 
 
 def test_main_importable():
